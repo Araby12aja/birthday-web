@@ -443,12 +443,25 @@
       height: 38px !important;
       font-size: 1rem !important;
     }
-    .music-note {
-      font-size: .7rem;
-      color: #c09aaa;
-      text-align: center;
-      margin-top: 2px;
+    .music-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 4px;
     }
+    #play-pause-btn {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--wine), #c0607a);
+      border: none;
+      color: #fff;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: transform .2s;
+    }
+    #play-pause-btn:hover { transform: scale(1.1); }
 
     /* ── RESPONSIVE ── */
     @media (max-width: 600px) {
@@ -471,14 +484,16 @@
       </div>
       <button id="music-close" title="Tutup" style="background:none;border:none;cursor:pointer;font-size:1rem;color:#c09aaa;line-height:1;">✕</button>
     </div>
-    <iframe
-      src="https://open.spotify.com/embed/track/3nBrNkBPMBqrgBaGGYxEEH?utm_source=generator&theme=0"
-      width="220" height="80"
-      frameborder="0"
-      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-      loading="lazy"
-      style="border-radius:10px;display:block;"
-    ></iframe>
+    <audio id="audio-player" loop style="display:none;">
+      <source src="Bruno_Mars_-_Risk_It_All.mp3" type="audio/mpeg">
+    </audio>
+    <div class="music-controls">
+      <button id="play-pause-btn">▶</button>
+      <div style="flex:1;height:4px;background:rgba(232,160,180,.25);border-radius:10px;overflow:hidden;cursor:pointer;" id="progress-track">
+        <div id="progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--wine),#c0607a);border-radius:10px;transition:width .3s linear;"></div>
+      </div>
+      <span id="time-display" style="font-size:.7rem;color:#c09aaa;min-width:32px;text-align:right;">0:00</span>
+    </div>
   </div>
   <button id="music-btn" title="Buka/Tutup Musik">🎵</button>
 </div>
@@ -773,15 +788,43 @@ modal.addEventListener('click', e => { if(e.target===modal) closeModal(); });
 document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
 
 /* ══ MUSIC PLAYER ══ */
-const musicBtn   = document.getElementById('music-btn');
-const musicCard  = document.getElementById('music-card');
-const musicClose = document.getElementById('music-close');
+const musicBtn    = document.getElementById('music-btn');
+const musicCard   = document.getElementById('music-card');
+const musicClose  = document.getElementById('music-close');
+const audio       = document.getElementById('audio-player');
+const playPauseBtn= document.getElementById('play-pause-btn');
+const progressBar = document.getElementById('progress-bar');
+const progressTrack = document.getElementById('progress-track');
+const timeDisplay = document.getElementById('time-display');
 
-musicBtn.addEventListener('click', () => {
-  musicCard.classList.toggle('visible');
+musicBtn.addEventListener('click', () => musicCard.classList.toggle('visible'));
+musicClose.addEventListener('click', () => musicCard.classList.remove('visible'));
+
+playPauseBtn.addEventListener('click', () => {
+  if (audio.paused) {
+    audio.play();
+    playPauseBtn.textContent = '⏸';
+    musicBtn.classList.add('playing');
+  } else {
+    audio.pause();
+    playPauseBtn.textContent = '▶';
+    musicBtn.classList.remove('playing');
+  }
 });
-musicClose.addEventListener('click', () => {
-  musicCard.classList.remove('visible');
+
+audio.addEventListener('timeupdate', () => {
+  if (!audio.duration) return;
+  const pct = (audio.currentTime / audio.duration) * 100;
+  progressBar.style.width = pct + '%';
+  const m = Math.floor(audio.currentTime / 60);
+  const s = Math.floor(audio.currentTime % 60).toString().padStart(2,'0');
+  timeDisplay.textContent = `${m}:${s}`;
+});
+
+progressTrack.addEventListener('click', (e) => {
+  const rect = progressTrack.getBoundingClientRect();
+  const pct  = (e.clientX - rect.left) / rect.width;
+  audio.currentTime = pct * audio.duration;
 });
 </script>
 </body>
